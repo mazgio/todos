@@ -1,76 +1,118 @@
+// TodoApp.js
 import './App.css';
-import TaskForm from "./TaskForm";
-import Task from "./Task";
+import TodoForm from "./TodoForm";
+import Todo from "./Todo";
 import { useEffect, useState } from "react";
+import axios from 'axios';
 
-function App() {
-  const [tasks, setTasks] = useState([]);
-
-  useEffect(() => {
-    if (tasks.length === 0) return;
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
 
   useEffect(() => {
-    const tasks = JSON.parse(localStorage.getItem('tasks'));
-    setTasks(tasks || []);
+    // Fetch todos from the server when the component mounts
+    axios.get('http://localhost:8888/todos')
+      .then(res => {
+        // Map the "done" values to true or false
+        const todosWithBooleanDone = res.data.map(todo => ({
+          id: todo.id,
+          name: todo.name,
+          done: todo.done === 1,
+        }));
+        setTodos(todosWithBooleanDone);
+      })
+      .catch(err => {
+        console.log(err);
+      });
   }, []);
 
-  function addTask(name) {
-    setTasks(prev => {
-      return [...prev, { name: name, done: false }];
-    });
+  function addTodo(name) {
+    // Create a new todo on the server and update state
+    axios.post('http://localhost:8888/todos', { name, done: false })
+      .then(res => {
+        setTodos(prevTodos => [...prevTodos, res.data]);
+      })
+      .catch(err => {
+        console.log(err);
+      });
   }
 
-  function removeTask(indexToRemove) {
-    setTasks(prev => {
-      return prev.filter((taskObject, index) => index !== indexToRemove);
-    });
+  function removeTodo(id) {
+    // Delete a todo on the server and update state
+    axios.delete(`http://localhost:8888/todos/${id}`)
+      .then(() => {
+        setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
+      })
+      .catch(err => {
+        console.log(err);
+      });
   }
 
-  function updateTaskDone(taskIndex, newDone) {
-    setTasks(prev => {
-      const newTasks = [...prev];
-      newTasks[taskIndex].done = newDone;
-      return newTasks;
-    });
+  function updateTodoDone(id, newDone) {
+    console.log('Updating todo with ID:', id, 'Done:', newDone);
+
+    axios.put(`http://localhost:8888/todos/${id}`, { done: newDone })
+      .then(res => {
+        setTodos(prevTodos => {
+          const newTodos = [...prevTodos];
+          const index = newTodos.findIndex(todo => todo.id === id);
+          newTodos[index] = res.data;
+          return newTodos;
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
   }
 
-  const numberComplete = tasks.filter(t => t.done).length;
-  const numberTotal = tasks.length;
+  function renameTodo(id, newName) {
+    // Update the name of a todo on the server and update state
+    axios.put(`http://localhost:8888/todos/${id}`, { name: newName })
+      .then(res => {
+        setTodos(prevTodos => {
+          return prevTodos.map(todo =>
+            todo.id === res.data.id ? { ...todo, name: res.data.name } : todo
+          );
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
+  const numberComplete = todos.filter(t => t.done).length;
+  const numberTotal = todos.length;
 
   function getMessage() {
-    const percentage = numberComplete / numberTotal * 100;
-    if (percentage === 0) {
+    const percentage = (numberComplete / numberTotal) * 100;
+
+    // Use a small epsilon value to account for floating-point precision issues
+    const epsilon = 0.0001;
+
+    if (Math.abs(percentage - 0) < epsilon) {
       return 'Try to do at least one! 🙏';
     }
-    if (percentage === 100) {
+    if (Math.abs(percentage - 100) < epsilon) {
       return 'Nice job for today! 🏝';
     }
     return 'Keep it going 💪🏻';
-  }
-
-  function renameTask(index, newName) {
-    setTasks(prev => {
-      const newTasks = [...prev];
-      newTasks[index].name = newName;
-      return newTasks;
-    });
   }
 
   return (
     <main>
       <h1>{numberComplete}/{numberTotal} Complete</h1>
       <h2>{getMessage()}</h2>
-      <TaskForm onAdd={addTask} />
-      {tasks.map((task, index) => (
-        <Task {...task}
-          onRename={newName => renameTask(index, newName)}
-          onTrash={() => removeTask(index)}
-          onToggle={done => updateTaskDone(index, done)} />
+      <TodoForm onAdd={addTodo} />
+      {Array.isArray(todos) && todos.map(todo => (
+        <Todo
+          key={todo.id}
+          {...todo}
+          onRename={newName => renameTodo(todo.id, newName)}
+          onTrash={() => removeTodo(todo.id)}
+          onToggle={done => updateTodoDone(todo.id, done)}
+        />
       ))}
     </main>
   );
 }
 
-export default App;
+export default TodoApp;

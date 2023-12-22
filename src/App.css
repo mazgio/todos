@@ -30,7 +30,7 @@ form button {
   cursor: pointer;
 }
 
-div.task {
+div.todo {
   background-color: #30313d;
   border-radius: 10px;
   padding: 5px 9px;
@@ -39,22 +39,22 @@ div.task {
   align-items: center;
   transition: opacity 0.3s linear;
 }
-div.task svg {
+div.todo svg {
   height: 20px;
   margin-right: 6px;
   fill: #61dafb;
 }
-div.task.done {
+div.todo.done {
   opacity: 0.3;
 }
-div.task-name,
-div.task form {
+div.todo-name,
+div.todo form {
   flex-grow: 1;
 }
-div.task span {
+div.todo span {
   position: relative;
 }
-div.task span:before {
+div.todo span:before {
   content: "";
   display: block;
   width: 0;
@@ -64,7 +64,7 @@ div.task span:before {
   top: 10px;
   transition: width 0.1s linear;
 }
-div.task.done span:before {
+div.todo.done span:before {
   width: 100%;
 }
 
@@ -88,7 +88,7 @@ button.trash svg {
   fill: #888;
   height: 14px;
 }
-div.task input {
+div.todo input {
   border: 2px solid #555;
   border-radius: 5px;
   padding: 2px 4px;
