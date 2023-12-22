@@ -2,31 +2,35 @@
 import './App.css';
 import TodoForm from "./TodoForm";
 import Todo from "./Todo";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from 'axios';
 
 function TodoApp() {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
 
+  const inputRef = useRef(null);
+
 
 
   useEffect(() => {
-    // Fetch todos from the server when the component mounts
-    axios.get('http://localhost:8888/todos')
-      .then(res => {
-        // Map the "done" values to true or false
-        const todosWithBooleanDone = res.data.map(todo => ({
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('http://localhost:8888/todos');
+        const todosWithBooleanDone = response.data.map(todo => ({
           id: todo.id,
           name: todo.name,
           done: todo.done === 1,
         }));
         setTodos(todosWithBooleanDone);
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  }, [todos, newTodo]);
+      } catch (error) {
+        console.error('Error fetching todos:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
 
   function addTodo(name) {
     // Create a new todo on the server and update state
@@ -75,9 +79,15 @@ function TodoApp() {
     axios.put(`http://localhost:8888/todos/${id}`, { name: newName })
       .then(res => {
         setTodos(prevTodos => {
-          return prevTodos.map(todo =>
+          const updatedTodos = prevTodos.map(todo =>
             todo.id === res.data.id ? { ...todo, name: res.data.name } : todo
           );
+          // Set focus after updating state
+          if (inputRef.current && inputRef.current.id === id) {
+            inputRef.current.focus();
+          }
+
+          return updatedTodos;
         });
       })
       .catch(err => {

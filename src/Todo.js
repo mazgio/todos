@@ -1,35 +1,52 @@
 // todo.js
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 function Todo({ id, name, done, onRename, onTrash, onToggle }) {
   const [editMode, setEditMode] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [inputValue, setInputValue] = useState(name);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (editMode) {
+      inputRef.current.focus();
+    }
+  }, [editMode]);
 
   const handleToggle = () => {
-    const newDone = !isChecked;
-    setIsChecked(newDone);
+    const newDone = !done;
     if (id) {
-      onToggle(newDone); // Ensure that the id is defined before calling onToggle
+      onToggle(newDone);
     }
+  };
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    setEditMode(false);
+    onRename(inputValue, id);
   };
 
   return (
     <div className={'todo ' + (done ? 'done' : '')}>
       <input
         type="checkbox"
-        checked={isChecked}
+        checked={done}
         onChange={handleToggle}
       />
       {!editMode ? (
-        <div className="todo-name" onClick={() => setEditMode(prev => !prev)}>
+        <div className="todo-name" onClick={() => setEditMode(true)}>
           <span>{name}</span>
         </div>
       ) : (
-        <form onSubmit={e => { e.preventDefault(); setEditMode(false); }}>
+        <form onSubmit={handleFormSubmit}>
           <input
             type="text"
-            value={name}
-            onChange={e => onRename(e.target.value, id)} // Pass the id when renaming
+            value={inputValue}
+            onChange={handleInputChange}
+            ref={inputRef}
           />
         </form>
       )}
