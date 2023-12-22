@@ -3,12 +3,14 @@ import React, { useState } from "react";
 
 function Todo({ id, name, done, onRename, onTrash, onToggle }) {
   const [editMode, setEditMode] = useState(false);
-  const [isChecked, setIsChecked] = useState(done || false);
+  const [isChecked, setIsChecked] = useState(false);
 
   const handleToggle = () => {
     const newDone = !isChecked;
     setIsChecked(newDone);
-    onToggle(newDone); // Ensure that the id is passed here
+    if (id) {
+      onToggle(newDone); // Ensure that the id is defined before calling onToggle
+    }
   };
 
   return (

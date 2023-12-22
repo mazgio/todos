@@ -17,12 +17,19 @@ function handleServerError(res, err) {
 
 // Middleware for validating request data
 function validateRequestData(req, res, next) {
+  // Allow routes to skip the name validation if needed
+  if (req.headers['skip-name-validation'] === 'true') {
+    return next();
+  }
+
   const { name } = req.body;
   if (!name) {
     return res.status(400).json({ message: 'You must include a name in your request.' });
   }
+
   next();
 }
+
 
 server.get('/', (req, res) => {
   res.send('Welcome to the Todo app server!');
@@ -68,7 +75,17 @@ server.put('/todos/:id', validateRequestData, async (req, res) => {
   const { name, done } = req.body;
 
   try {
-    const updatedCount = await db('todos').where({ id }).update({ name, done: Boolean(done) });
+    // Only update the name if it's provided
+    const updateData = {};
+    if (name !== undefined) {
+      updateData.name = name;
+    }
+
+    if (done !== undefined) {
+      updateData.done = Boolean(done);
+    }
+
+    const updatedCount = await db('todos').where({ id }).update(updateData);
 
     if (updatedCount === 0) {
       return res.status(404).json({ message: 'Todo not found' });

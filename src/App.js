@@ -7,6 +7,9 @@ import axios from 'axios';
 
 function TodoApp() {
   const [todos, setTodos] = useState([]);
+  const [newTodo, setNewTodo] = useState('');
+
+
 
   useEffect(() => {
     // Fetch todos from the server when the component mounts
@@ -23,13 +26,13 @@ function TodoApp() {
       .catch(err => {
         console.log(err);
       });
-  }, []);
+  }, [todos, newTodo]);
 
   function addTodo(name) {
     // Create a new todo on the server and update state
     axios.post('http://localhost:8888/todos', { name, done: false })
       .then(res => {
-        setTodos(prevTodos => [...prevTodos, res.data]);
+        setTodos([...todos, res.data]);
       })
       .catch(err => {
         console.log(err);
@@ -40,7 +43,7 @@ function TodoApp() {
     // Delete a todo on the server and update state
     axios.delete(`http://localhost:8888/todos/${id}`)
       .then(() => {
-        setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id));
+        setTodos(todos => todos.filter(todo => todo.id !== id));
       })
       .catch(err => {
         console.log(err);
@@ -48,21 +51,24 @@ function TodoApp() {
   }
 
   function updateTodoDone(id, newDone) {
-    console.log('Updating todo with ID:', id, 'Done:', newDone);
+    // Toggle the done status of the todo
 
-    axios.put(`http://localhost:8888/todos/${id}`, { done: newDone })
+    axios.put(
+      `http://localhost:8888/todos/${id}`,
+      { done: !todos.find(todo => todo.id === id).done },
+      { headers: { 'Skip-Name-Validation': 'true' } }
+    )
       .then(res => {
-        setTodos(prevTodos => {
-          const newTodos = [...prevTodos];
-          const index = newTodos.findIndex(todo => todo.id === id);
-          newTodos[index] = res.data;
-          return newTodos;
-        });
+        setTodos(todos =>
+          todos.map(todo => (todo.id === id ? { ...todo, done: !todo.done } : todo))
+        );
       })
       .catch(err => {
         console.log(err);
       });
   }
+
+
 
   function renameTodo(id, newName) {
     // Update the name of a todo on the server and update state
@@ -79,7 +85,9 @@ function TodoApp() {
       });
   }
 
-  const numberComplete = todos.filter(t => t.done).length;
+
+
+  const numberComplete = todos.filter(t => t?.done).length;
   const numberTotal = todos.length;
 
   function getMessage() {
@@ -101,14 +109,21 @@ function TodoApp() {
     <main>
       <h1>{numberComplete}/{numberTotal} Complete</h1>
       <h2>{getMessage()}</h2>
-      <TodoForm onAdd={addTodo} />
-      {Array.isArray(todos) && todos.map(todo => (
+      <TodoForm
+        onAdd={(name) => {
+          addTodo(name);
+          setNewTodo(''); // Clear the input after adding a new todo
+        }}
+        newTodo={newTodo}
+        setNewTodo={setNewTodo}
+      />
+      {todos.map((todo) => (
         <Todo
           key={todo.id}
           {...todo}
-          onRename={newName => renameTodo(todo.id, newName)}
+          onRename={(newName) => renameTodo(todo.id, newName)}
           onTrash={() => removeTodo(todo.id)}
-          onToggle={done => updateTodoDone(todo.id, done)}
+          onToggle={(done) => updateTodoDone(todo.id, done)}
         />
       ))}
     </main>
