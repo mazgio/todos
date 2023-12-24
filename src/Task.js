@@ -1,21 +1,34 @@
 import Checkbox from "./Checkbox";
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect, useRef } from "react";
 
-export default function Task({ id, task, onToggle, onDelete, onEdit }) {
+export default function Task({ id, task, onToggle, onDelete, onEdit, onUpdate }) {
+
+  const inputRef = useRef(null);
   const [editMode, setEditMode] = useState(false);
   const [newName, setNewName] = useState(task.name);
 
-  const handleEdit = async () => {
+  useEffect(() => {
+    if (editMode) {
+      inputRef.current.focus();
+    }
+  }, [editMode]);
+
+
+  const handleInputChange = (e) => {
+    setNewName(e.target.value);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await axios.put(`http://localhost:7777/todos/${id}`, { name: newName });
-      onEdit(id, newName); // Update the local state after successful edit
-      setEditMode(false); // Exit edit mode
+      await onEdit(id, newName);
+      setEditMode(false);
+      onUpdate(id, { name: newName }); // Trigger immediate fetch after successful update
     } catch (error) {
-      console.error('Error editing task:', error);
-      // Handle the error (e.g., show a message to the user)
+      console.error('Error updating task:', error);
     }
   };
+
 
   return (
     <div className={`task ${task.done ? 'done' : ''}`}>
@@ -28,8 +41,8 @@ export default function Task({ id, task, onToggle, onDelete, onEdit }) {
       )}
 
       {editMode && (
-        <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }}>
-          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} />
+        <form onSubmit={handleFormSubmit}>
+          <input type="text" value={newName} onChange={handleInputChange} ref={inputRef} />
         </form>
       )}
 

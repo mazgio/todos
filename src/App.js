@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import TaskForm from './TaskForm';
 import Task from './Task';
@@ -6,22 +6,29 @@ import './App.css';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
-  const inputRef = useRef(null);
 
 
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:7777/todos');
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('http://localhost:7777/todos');
-        setTasks(response.data);
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-      }
-    };
     fetchData();
   }, []);
 
+  const updateTask = async (id, updatedData) => {
+    try {
+      await axios.put(`http://localhost:7777/todos/${id}`, updatedData);
+      fetchData(); // Fetch data immediately after the successful update
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
 
   const addTask = async (name) => {
     try {
@@ -41,10 +48,6 @@ export default function App() {
         const updatedTasks = prevTasks.map((task) =>
           task.id === response.data.id ? { ...task, name: response.data.name } : task
         );
-        // Set focus after updating state
-        if (inputRef.current && inputRef.current.id === id) {
-          inputRef.current.focus();
-        }
         // Add any additional logic you need
         return updatedTasks;
       });
@@ -71,7 +74,7 @@ export default function App() {
     // Toggle the done status of the todo
     axios.put(
       `http://localhost:7777/todos/${id}`,
-      { done: !done },
+      { done: !tasks.find(task => task.id === id).done },
       { headers: { 'Skip-Name-Validation': 'true' } }
     )
       .then(res => {
@@ -83,7 +86,6 @@ export default function App() {
         console.log(err);
       });
   }
-
 
   const numberComplete = tasks.filter(t => t.done).length;
   const numberTotal = tasks.length;
@@ -112,6 +114,8 @@ export default function App() {
           onToggle={toggleTask}
           onDelete={deleteTask}
           onEdit={editTask}
+          onUpdate={updateTask} // Pass the update function to Task component
+
         />
       ))}
     </main>
