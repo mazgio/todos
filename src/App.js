@@ -1,40 +1,62 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import TaskForm from './TaskForm';
+import Task from './Task';
 import './App.css';
-import TaskForm from "./TaskForm";
-import Task from "./Task";
-import { useEffect, useState } from "react";
 
-function App() {
+export default function App() {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    if (tasks.length === 0) return;
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
-
-  useEffect(() => {
-    const tasks = JSON.parse(localStorage.getItem('tasks'));
-    setTasks(tasks || []);
+    // Fetch tasks from the server
+    axios.get('http://localhost:7777/todos')
+      .then(response => setTasks(response.data))
+      .catch(error => console.error('Error fetching tasks:', error));
   }, []);
 
-  function addTask(name) {
-    setTasks(prev => {
-      return [...prev, { name: name, done: false }];
-    });
-  }
+  const addTask = async (name) => {
+    try {
+      await axios.post('http://localhost:7777/todos', { name });
+      // Fetch updated tasks after adding a new task
+      const response = await axios.get('http://localhost:7777/todos');
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
+  };
 
-  function removeTask(indexToRemove) {
-    setTasks(prev => {
-      return prev.filter((taskObject, index) => index !== indexToRemove);
-    });
-  }
+  const editTask = async (id, newName) => {
+    try {
+      await axios.put(`http://localhost:7777/todos/${id}`, { name: newName });
+      // Fetch updated tasks after editing a task
+      const response = await axios.get('http://localhost:7777/todos');
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error editing task:', error);
+    }
+  };
 
-  function updateTaskDone(taskIndex, newDone) {
-    setTasks(prev => {
-      const newTasks = [...prev];
-      newTasks[taskIndex].done = newDone;
-      return newTasks;
-    });
-  }
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`http://localhost:7777/todos/${id}`);
+      // Fetch updated tasks after deleting a task
+      const response = await axios.get('http://localhost:7777/todos');
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
+  };
+
+  const toggleTask = async (id, done) => {
+    try {
+      await axios.put(`http://localhost:7777/todos/${id}`, { done: !done });
+      // Fetch updated tasks after toggling a task
+      const response = await axios.get('http://localhost:7777/todos');
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error toggling task:', error);
+    }
+  };
 
   const numberComplete = tasks.filter(t => t.done).length;
   const numberTotal = tasks.length;
@@ -50,27 +72,20 @@ function App() {
     return 'Keep it going 💪🏻';
   }
 
-  function renameTask(index, newName) {
-    setTasks(prev => {
-      const newTasks = [...prev];
-      newTasks[index].name = newName;
-      return newTasks;
-    });
-  }
-
   return (
     <main>
       <h1>{numberComplete}/{numberTotal} Complete</h1>
       <h2>{getMessage()}</h2>
       <TaskForm onAdd={addTask} />
-      {tasks.map((task, index) => (
-        <Task {...task}
-          onRename={newName => renameTask(index, newName)}
-          onTrash={() => removeTask(index)}
-          onToggle={done => updateTaskDone(index, done)} />
+      {tasks.map((task) => (
+        <Task
+          key={task.id}
+          task={task}
+          onEdit={editTask}
+          onDelete={deleteTask}
+          onToggle={toggleTask}
+        />
       ))}
     </main>
   );
 }
-
-export default App;
