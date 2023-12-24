@@ -7,16 +7,8 @@ exports.seed = async function (knex) {
   await knex('todos').truncate();
   await knex('todos').insert([
     {
-      message: "walk the dog"
-    },
-    {
-      message: "update address"
-    },
-    {
-      message: "wash clothes"
-    },
-    {
-      message: "call your mom"
+      message: "",
+      done: false
     }
   ]);
 };
