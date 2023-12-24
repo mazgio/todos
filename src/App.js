@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import TaskForm from './TaskForm';
 import Task from './Task';
@@ -6,13 +6,22 @@ import './App.css';
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
+  const inputRef = useRef(null);
+
+
 
   useEffect(() => {
-    // Fetch tasks from the server
-    axios.get('http://localhost:7777/todos')
-      .then(response => setTasks(response.data))
-      .catch(error => console.error('Error fetching tasks:', error));
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('http://localhost:7777/todos');
+        setTasks(response.data);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+    fetchData();
   }, []);
+
 
   const addTask = async (name) => {
     try {
@@ -27,14 +36,24 @@ export default function App() {
 
   const editTask = async (id, newName) => {
     try {
-      await axios.put(`http://localhost:7777/todos/${id}`, { name: newName });
-      // Fetch updated tasks after editing a task
-      const response = await axios.get('http://localhost:7777/todos');
-      setTasks(response.data);
+      const response = await axios.put(`http://localhost:7777/todos/${id}`, { name: newName });
+      setTasks((prevTasks) => {
+        const updatedTasks = prevTasks.map((task) =>
+          task.id === response.data.id ? { ...task, name: response.data.name } : task
+        );
+        // Set focus after updating state
+        if (inputRef.current && inputRef.current.id === id) {
+          inputRef.current.focus();
+        }
+        // Add any additional logic you need
+        return updatedTasks;
+      });
     } catch (error) {
       console.error('Error editing task:', error);
+      // Handle the error (e.g., show a message to the user)
     }
   };
+
 
   const deleteTask = async (id) => {
     try {
@@ -47,16 +66,24 @@ export default function App() {
     }
   };
 
-  const toggleTask = async (id, done) => {
-    try {
-      await axios.put(`http://localhost:7777/todos/${id}`, { done: !done });
-      // Fetch updated tasks after toggling a task
-      const response = await axios.get('http://localhost:7777/todos');
-      setTasks(response.data);
-    } catch (error) {
-      console.error('Error toggling task:', error);
-    }
-  };
+
+  function toggleTask(id, done) {
+    // Toggle the done status of the todo
+    axios.put(
+      `http://localhost:7777/todos/${id}`,
+      { done: !done },
+      { headers: { 'Skip-Name-Validation': 'true' } }
+    )
+      .then(res => {
+        setTasks(tasks =>
+          tasks.map(task => (task.id === id ? { ...task, done: !task.done } : task))
+        );
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
 
   const numberComplete = tasks.filter(t => t.done).length;
   const numberTotal = tasks.length;
@@ -80,10 +107,11 @@ export default function App() {
       {tasks.map((task) => (
         <Task
           key={task.id}
-          task={task}
-          onEdit={editTask}
-          onDelete={deleteTask}
+          id={task.id}  // Make sure you pass the correct id
+          task={task}   // Make sure you pass the correct task object
           onToggle={toggleTask}
+          onDelete={deleteTask}
+          onEdit={editTask}
         />
       ))}
     </main>

@@ -1,12 +1,20 @@
 import Checkbox from "./Checkbox";
 import { useState } from "react";
+import axios from "axios";
 
-export default function Task({ task, onToggle, onDelete, onEdit }) {
+export default function Task({ id, task, onToggle, onDelete, onEdit }) {
   const [editMode, setEditMode] = useState(false);
+  const [newName, setNewName] = useState(task.name);
 
-  const handleRename = (newName) => {
-    onEdit(task.id, newName);
-    setEditMode(false);
+  const handleEdit = async () => {
+    try {
+      await axios.put(`http://localhost:7777/todos/${id}`, { name: newName });
+      onEdit(id, newName); // Update the local state after successful edit
+      setEditMode(false); // Exit edit mode
+    } catch (error) {
+      console.error('Error editing task:', error);
+      // Handle the error (e.g., show a message to the user)
+    }
   };
 
   return (
@@ -20,8 +28,8 @@ export default function Task({ task, onToggle, onDelete, onEdit }) {
       )}
 
       {editMode && (
-        <form onSubmit={(ev) => { ev.preventDefault(); setEditMode(false); }}>
-          <input type="text" value={task.name} onChange={(ev) => handleRename(ev.target.value)} />
+        <form onSubmit={(e) => { e.preventDefault(); handleEdit(); }}>
+          <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} />
         </form>
       )}
 

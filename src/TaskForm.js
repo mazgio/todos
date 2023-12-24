@@ -3,8 +3,8 @@ import { useState } from "react";
 export default function TaskForm({ onAdd }) {
   const [taskName, setTaskName] = useState('');
 
-  function handleSubmit(ev) {
-    ev.preventDefault();
+  function handleSubmit(e) {
+    e.preventDefault();
     onAdd(taskName);
     setTaskName('');
   }
@@ -15,7 +15,7 @@ export default function TaskForm({ onAdd }) {
       <input
         type="text"
         value={taskName}
-        onChange={(ev) => setTaskName(ev.target.value)}
+        onChange={(e) => setTaskName(e.target.value)}
         placeholder="Your next task..."
       />
     </form>
