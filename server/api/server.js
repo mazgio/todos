@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const db = require('./dbConfig');
-const microtask = require('microtask');
+const queueMicrotask = require('queue-microtask');
 
 
 const server = express();
@@ -12,7 +12,7 @@ server.use(helmet());
 server.use(express.json());
 
 // Use the queueMicrotask function
-microtask(() => {
+queueMicrotask(() => {
   console.log('This task will be executed in the next microtask.');
 });
 
