@@ -1,7 +1,7 @@
 const server = require('./api/server');
 
 const HOST = 'localhost';
-const PORT = 6666;
+const PORT = 8900;
 
 
 
