@@ -10,7 +10,7 @@ export default function App() {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://localhost:7777/todos');
+      const response = await axios.get('http://localhost:6666/todos');
       setTasks(response.data);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -23,7 +23,7 @@ export default function App() {
 
   const updateTask = async (id, updatedData) => {
     try {
-      await axios.put(`http://localhost:7777/todos/${id}`, updatedData);
+      await axios.put(`http://localhost:6666/todos/${id}`, updatedData);
       fetchData(); // Fetch data immediately after the successful update
     } catch (error) {
       console.error('Error updating task:', error);
@@ -32,9 +32,9 @@ export default function App() {
 
   const addTask = async (name) => {
     try {
-      await axios.post('http://localhost:7777/todos', { name });
+      await axios.post('http://localhost:6666/todos', { name });
       // Fetch updated tasks after adding a new task
-      const response = await axios.get('http://localhost:7777/todos');
+      const response = await axios.get('http://localhost:6666/todos');
       setTasks(response.data);
     } catch (error) {
       console.error('Error adding task:', error);
@@ -43,7 +43,7 @@ export default function App() {
 
   const editTask = async (id, newName) => {
     try {
-      const response = await axios.put(`http://localhost:7777/todos/${id}`, { name: newName });
+      const response = await axios.put(`http://localhost:6666/todos/${id}`, { name: newName });
       setTasks((prevTasks) => {
         const updatedTasks = prevTasks.map((task) =>
           task.id === response.data.id ? { ...task, name: response.data.name } : task
@@ -60,9 +60,9 @@ export default function App() {
 
   const deleteTask = async (id) => {
     try {
-      await axios.delete(`http://localhost:7777/todos/${id}`);
+      await axios.delete(`http://localhost:6666/todos/${id}`);
       // Fetch updated tasks after deleting a task
-      const response = await axios.get('http://localhost:7777/todos');
+      const response = await axios.get('http://localhost:6666/todos');
       setTasks(response.data);
     } catch (error) {
       console.error('Error deleting task:', error);
@@ -73,7 +73,7 @@ export default function App() {
   function toggleTask(id, done) {
     // Toggle the done status of the todo
     axios.put(
-      `http://localhost:7777/todos/${id}`,
+      `http://localhost:6666/todos/${id}`,
       { done: !tasks.find(task => task.id === id).done },
       { headers: { 'Skip-Name-Validation': 'true' } }
     )
