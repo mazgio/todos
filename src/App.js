@@ -87,15 +87,21 @@ export default function App() {
       });
   }
 
-  const numberComplete = tasks.filter(t => t.done).length;
+
+
+  const numberComplete = tasks.filter(t => t?.done).length;
   const numberTotal = tasks.length;
 
   function getMessage() {
-    const percentage = numberComplete / numberTotal * 100;
-    if (percentage === 0) {
+    const percentage = (numberComplete / numberTotal) * 100;
+
+    // Use a small epsilon value to account for floating-point precision issues
+    const epsilon = 0.0001;
+
+    if (Math.abs(percentage - 0) < epsilon) {
       return 'Try to do at least one! 🙏';
     }
-    if (percentage === 100) {
+    if (Math.abs(percentage - 100) < epsilon) {
       return 'Nice job for today! 🏝';
     }
     return 'Keep it going 💪🏻';
