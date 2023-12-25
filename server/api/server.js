@@ -2,12 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const db = require('./dbConfig');
+const queueMicrotask = require('queue-microtask');
+
 
 const server = express();
 
 server.use(cors());
 server.use(helmet());
 server.use(express.json());
+
+// Use the queueMicrotask function
+queueMicrotask(() => {
+  console.log('This task will be executed in the next microtask.');
+});
 
 // Middleware for handling server errors
 function handleServerError(res, err) {
