@@ -1,21 +1,14 @@
-// Update with your config settings.
+// File: knexfile.js (Knex configuration)
+const dbConfig = require('./db');
 
-/**
- * @type { Object.<string, import("knex").Knex.Config> }
- */
 module.exports = {
-
   development: {
-    client: 'sqlite3',
-    connection: {
-      filename: './api/todos.db3'
-    },
+    ...dbConfig,
     migrations: {
-      directory: './api/migrations'
+      directory: './api/migrations',
     },
     seed: {
-      directory: './api/seeds'
+      directory: './api/seeds',
     },
-    useNullAsDefault: true,
   }
 };
