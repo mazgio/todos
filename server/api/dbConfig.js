@@ -1,14 +1,13 @@
 // File: dbConfig.js
-const dbPath = process.env.NODE_ENV === 'production' ? '/path/to/your/db/file.db' : './api/todos.db3';
+const { Client } = require('pg');
 
-const dbConfig = {
-  client: 'sqlite3',  // Specify the database client (in this case, SQLite)
-  connection: {
-    filename: dbPath,
+const db = new Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // For local development
   },
-  useNullAsDefault: true,
-};
+});
 
-const knex = require('knex')(dbConfig);
+db.connect();
 
-module.exports = knex;
+module.exports = db;
